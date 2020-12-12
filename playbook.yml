@@ -21,7 +21,7 @@
       name: ['curl']
       state: latest
 
-  - name: upload helper script
+  - name: generate helper script locally
     become: false
     template:
       src: templates/install_master.j2
@@ -30,7 +30,7 @@
     when: main == 1
     delegate_to: localhost
 
-  - name: upload helper script
+  - name: generate helper script locally
     become: false
     template:
       src: templates/install_slave.j2
@@ -44,7 +44,6 @@
       path: /usr/local/bin/k3s-uninstall.sh
     register: stat_result
       
-
   - name: run k3sup helper script for master
     become: false
     shell: sh /tmp/install_master.sh
