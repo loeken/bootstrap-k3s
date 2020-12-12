@@ -1,0 +1,64 @@
+### simple k3s bootstrap using k3s
+### the vms im using this on has a primary network card with a public ip and a secondary network card with an internal connection using a vlan ( interfacename eno2.100 )
+### to keep it simple define ssh keys in the vars/sshkeys section look into inventory for ips
+### setting external_ip in inventory leads to node-external-ip being set ( which i use to hardcode a load balancer )
+---
+- name: playbook to bootstrap k3s cluster
+  hosts: k3s
+  become: true
+  become_user: root
+  serial: 1
+  tasks:
+
+  - name: update apt packages
+    apt: 
+      name: "*"
+      state: "latest"
+      update_cache: true
+
+  - name: install curl
+    apt:
+      name: ['curl']
+      state: latest
+
+  - name: upload helper script
+    become: false
+    template:
+      src: templates/install_master.j2
+      dest: /tmp/install_master.sh
+      mode: '0770'
+    when: main == 1
+    delegate_to: localhost
+
+  - name: upload helper script
+    become: false
+    template:
+      src: templates/install_slave.j2
+      dest: "/tmp/install_slave_{{ inventory_hostname }}.sh"
+      mode: '0770'
+    when: main == 0
+    delegate_to: localhost
+
+  - name: check if already installed
+    stat:
+      path: /usr/local/bin/k3s-uninstall.sh
+    register: stat_result
+      
+
+  - name: run k3sup helper script for master
+    become: false
+    shell: sh /tmp/install_master.sh
+    when: main == 1 and stat_result.stat.exists == false
+    register: output2
+    delegate_to: localhost
+
+  - name: run k3sup helper script for slave
+    shell: "sh /tmp/install_slave_{{ inventory_hostname }}.sh"
+    become: false
+    when: main == 0 and stat_result.stat.exists == false
+    register: output2
+    delegate_to: localhost
+
+  - name: print output
+    debug: 
+      msg: "{{ output2 }}"

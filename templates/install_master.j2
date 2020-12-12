@@ -1,0 +1,8 @@
+#!/bin/bash
+k3sup install \
+  --k3s-version v1.19.1-rc2+k3s1 \
+  --ip {{ internal_ip }} \
+  --user debian  \
+  --cluster \
+  --k3s-extra-args '--flannel-iface {{ cluster_iface }} --no-deploy=traefik --bind-address={{ internal_ip }} --advertise-address={{ internal_ip }} --node-ip={{ internal_ip }} --node-external-ip {{ external_ip }}'
+sleep 10

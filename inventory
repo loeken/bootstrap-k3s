@@ -1,0 +1,4 @@
+[k3s]
+k3s-node-01 ansible_host=10.0.250.1 ansible_user=debian main=1 master_ip=10.0.250.1 external_ip=1.2.3.4 internal_ip=10.0.250.1 cluster_iface=eno2.100
+k3s-node-02 ansible_host=10.0.250.2 ansible_user=debian main=0 master_ip=10.0.250.1 external_ip=1.2.3.4 internal_ip=10.0.250.2 cluster_iface=eno2.100
+k3s-node-03 ansible_host=10.0.250.3 ansible_user=debian main=0 master_ip=10.0.250.1 external_ip=1.2.3.4 internal_ip=10.0.250.3 cluster_iface=eno2.100
