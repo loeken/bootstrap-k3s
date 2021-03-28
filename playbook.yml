@@ -8,6 +8,8 @@
   become: true
   become_user: root
   serial: 1
+  vars:
+    k3s_version: v1.20.5-rc1+k3s1 
   tasks:
 
   - name: update apt packages
@@ -21,6 +23,45 @@
       name: ['curl']
       state: latest
 
+  - name: check if already installed
+    stat:
+      path: /tmp/id_rsa_bootstrap_k3s
+    delegate_to: localhost
+    become: false
+    register: keypair_stat_result
+
+  - name: Generate an OpenSSH keypair with the default values (4096 bits, rsa)
+    become: false
+    community.crypto.openssh_keypair:
+      path: /tmp/id_rsa_bootstrap_k3s
+    delegate_to: localhost
+    when: keypair_stat_result.stat.exists == false
+      
+  - name: upload keypair to master
+    become: false
+    copy:
+      src: /tmp/id_rsa_bootstrap_k3s
+      dest: ~/.ssh/id_rsa
+
+  - name: upload keypair to master
+    become: false
+    copy:
+      src: /tmp/id_rsa_bootstrap_k3s.pub
+      dest: ~/.ssh/id_rsa.pub
+
+  - name: add pubkey to servers
+    become: false
+    ansible.posix.authorized_key:
+      user: "{{ ansible_user }}"
+      state: present
+      key: "{{ lookup('file', '/tmp/id_rsa_bootstrap_k3s.pub') }}"
+      path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+      manage_dir: true
+    register: output
+
+  - name: debug
+    debug: msg="{{ output }}"
+
   - name: generate helper script locally
     become: false
     template:
@@ -30,14 +71,29 @@
     when: main == 1
     delegate_to: localhost
 
-  - name: generate helper script locally
+  - name: Fetch k3sup setup
+    get_url:
+      url: https://get.k3sup.dev
+      dest: /usr/local/bin/getk3sup.sh
+      mode: 0755
+    become: yes
+    register: fetchgetk3sup
+    when: main == 1
+
+  - name: Install k3sup binary
+    when: fetchgetk3sup is succeeded and main == 1
+    command: /usr/local/bin/getk3sup.sh
+    become: yes
+    register: installk3sup
+    
+  - name: generate helper script on master
     become: false
     template:
       src: templates/install_slave.j2
-      dest: "/tmp/install_slave_{{ inventory_hostname }}.sh"
+      dest: "/tmp/install_slave.sh"
       mode: '0770'
     when: main == 0
-    delegate_to: localhost
+    delegate_to: "{{ bootstrap_master_name }}"
 
   - name: check if already installed
     stat:
@@ -52,12 +108,28 @@
     delegate_to: localhost
 
   - name: run k3sup helper script for slave
-    shell: "sh /tmp/install_slave_{{ inventory_hostname }}.sh"
+    shell: "sh /tmp/install_slave.sh"
     become: false
     when: main == 0 and stat_result.stat.exists == false
     register: output2
-    delegate_to: localhost
+    delegate_to: "{{ bootstrap_master_name }}"
 
   - name: print output
     debug: 
       msg: "{{ output2 }}"
+
+  - name: cleanup 1 - remove ssh pubkeys
+    file:
+      path: "/home/{{ ansible_user }}/.ssh/id_rsa"
+      state: absent
+
+  - name: cleanup 2 - remove ssh pubkeys
+    file:
+      path: "/home/{{ ansible_user }}/.ssh/id_rsa.pub"
+      state: absent
+      
+  - name: cleanup 3 - remove authorized_keys entries
+    lineinfile:
+      state: absent
+      dest: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+      regexp: "^{{ lookup('file', '/tmp/id_rsa_bootstrap_k3s.pub') }}"

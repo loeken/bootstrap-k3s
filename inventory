@@ -1,4 +1,4 @@
 [k3s]
-k3s-node-01 ansible_host=10.0.250.1 ansible_user=debian main=1 master_ip=10.0.250.1 external_ip=1.2.3.4 internal_ip=10.0.250.1 cluster_iface=eno2.100
-k3s-node-02 ansible_host=10.0.250.2 ansible_user=debian main=0 master_ip=10.0.250.1 external_ip=1.2.3.4 internal_ip=10.0.250.2 cluster_iface=eno2.100
-k3s-node-03 ansible_host=10.0.250.3 ansible_user=debian main=0 master_ip=10.0.250.1 external_ip=1.2.3.4 internal_ip=10.0.250.3 cluster_iface=eno2.100
+s1-2-uk1 ansible_host=54.37.7.231 ansible_user=debian main=1 master_ip=10.0.157.54 bootstrap_master_name=s1-2-uk1 external_ip=54.37.7.231 internal_ip=10.0.157.54 cluster_iface=eth1
+s1-2-bhs5 ansible_host=51.79.94.35 ansible_user=debian main=0 master_ip=10.0.157.54 bootstrap_master_name=s1-2-uk1 external_ip=51.79.94.35 internal_ip=10.0.3.144 cluster_iface=eth1
+s1-2-de1 ansible_host=135.125.217.121 ansible_user=debian main=0 master_ip=10.0.157.54 bootstrap_master_name=s1-2-uk1 external_ip=135.125.217.121 internal_ip=10.0.52.230 cluster_iface=eth1
