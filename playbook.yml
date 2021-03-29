@@ -1,5 +1,5 @@
 ### simple k3s bootstrap using k3s
-### the vms im using this on has a primary network card with a public ip and a secondary network card with an internal connection using a vlan ( interfacename eno2.100 )
+### the vms im using this on has a primary network card with a public ip and a secondary network card with an internal connection using a vlan ( interfacename eth1 )
 ### to keep it simple define ssh keys in the vars/sshkeys section look into inventory for ips
 ### setting external_ip in inventory leads to node-external-ip being set ( which i use to hardcode a load balancer )
 ---
